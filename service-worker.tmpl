@@ -54,6 +54,8 @@ function deleteAllCaches() {
 self.addEventListener('install', function(event) {
   var now = Date.now();
 
+  console.log('QQQ: install event');
+
   event.waitUntil(
     caches.keys().then(function(allCacheNames) {
       return Promise.all(
@@ -68,14 +70,14 @@ self.addEventListener('install', function(event) {
           url.search += 'sw-precache=' + now;
           var urlWithCacheBusting = url.toString();
 
-          console.log('Adding URL "%s" to cache named "%s"', urlWithCacheBusting, cacheName);
+          console.log('QQQ: Adding URL "%s" to cache named "%s"', urlWithCacheBusting, cacheName);
           return caches.open(cacheName).then(function(cache) {
             var request = new Request(urlWithCacheBusting, {credentials: 'same-origin'});
             return fetch(request.clone()).then(function(response) {
               if (response.status == 200) {
                 return cache.put(request, response);
               } else {
-                console.error('Request for %s returned a response with status %d, so not attempting to cache it.',
+                console.error('QQQ: Request for %s returned a response with status %d, so not attempting to cache it.',
                   urlWithCacheBusting, response.status);
                 // Get rid of the empty cache if we can't add a successful response to it.
                 return caches.delete(cacheName);
@@ -89,7 +91,7 @@ self.addEventListener('install', function(event) {
             return cacheName.indexOf(CacheNamePrefix) == 0 &&
                    !(cacheName in CurrentCacheNamesToAbsoluteUrl);
           }).map(function(cacheName) {
-            console.log('Deleting out-of-date cache "%s"', cacheName);
+            console.log('QQQ: Deleting out-of-date cache "%s"', cacheName);
             return caches.delete(cacheName);
           })
         )
