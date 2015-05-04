@@ -24,7 +24,19 @@
 
 
 
-var PrecacheConfig = [["css/main.css","3cb4f06fd9e705bea97eb1bece31fd6d"],["dynamic/page1","7ea130186a1087177c3f587e510709c3"],["dynamic/page2","cf458509f6e510a24c0e9f7245337cd4"],["images/one.png","c5a951f965e6810d7b65615ee0d15053"],["images/two.png","29d2cd301ed1e5497e12cafee35a0188"],["index.html","7d0ff18be727aeb3e19d535ea8f0af41"],["js/a.js","abcb1c5b4c6752aed90979fb3b6cf77a"],["js/b.js","d8e5842f1710f6f4f8fe2fe322a73ade"],["js/ext/jquery-2.1.3.min.js","32015dd42e9582a80a84736f5d9a44d7"],["js/ext/jsapi.js","e29257e6fe950262901fc12496f8aae7"],["js/service-worker-registration.js","73e3d030100db6a8592af71bc3e2cb31"]];
+var PrecacheConfig = [
+    ["css/main.css", "3cb4f06fd9e705bea97eb1bece31fd6d"],
+    ["gulp_generated_service-worker.js", "caceb6052ab419f6bc436ab7ccd2189e"],
+    ["images/one.png", "c5a951f965e6810d7b65615ee0d15053"],
+    ["images/two.png", "29d2cd301ed1e5497e12cafee35a0188"],
+    ["index.html", "408a7587f6d57c8f600d0667efd193cc"],
+    ["js/a.js", "abcb1c5b4c6752aed90979fb3b6cf77a"],
+    ["js/b.js", "d8e5842f1710f6f4f8fe2fe322a73ade"],
+    ["js/service-worker-registration.js", "a3859c235652df5cb8dd551726beea3e"],
+    ["views/layout.jade", "e3ad6717f3dfb203b85c5798c052fc90"],
+    ["views/page1.jade", "b14b661262c84fa2a2a15eb729fe2fbe"],
+    ["views/page2.jade", "494910e4835810d59f7dd281ee896d5e"]
+];
 var CacheNamePrefix = 'sw-precache-v1-sw-precache-' + (self.registration ? self.registration.scope : '') + '-';
 
 
@@ -84,15 +96,10 @@ var AbsoluteUrlToCacheName = mappings.absoluteUrlToCacheName;
 var CurrentCacheNamesToAbsoluteUrl = mappings.currentCacheNamesToAbsoluteUrl;
 
 function deleteAllCaches() {
-  caches.keys().then(function(names){console.log('QQQ: deleteallcaches: %s' ,names);})
-
   return caches.keys().then(function(cacheNames) {
     return Promise.all(
       cacheNames.map(function(cacheName) {
-        console.log('QQQ: caches.delete: %s', cacheName);
-        return caches.delete(cacheName)
-            .then(function(result){console.log('QQQ: caches.delete: %s' ,result);})
-        ;
+        return caches.delete(cacheName);
       })
     );
   });
@@ -100,9 +107,6 @@ function deleteAllCaches() {
 
 self.addEventListener('install', function(event) {
   var now = Date.now();
-
-  console.log('QQQ: install event');
-  console.log(event);
 
   event.waitUntil(
     caches.keys().then(function(allCacheNames) {
@@ -118,17 +122,14 @@ self.addEventListener('install', function(event) {
           url.search += 'sw-precache=' + now;
           var urlWithCacheBusting = url.toString();
 
-          console.log('QQQ: Adding URL "%s" to cache named "%s"', urlWithCacheBusting, cacheName);
+          console.log('Adding URL "%s" to cache named "%s"', urlWithCacheBusting, cacheName);
           return caches.open(cacheName).then(function(cache) {
             var request = new Request(urlWithCacheBusting, {credentials: 'same-origin'});
             return fetch(request.clone()).then(function(response) {
               if (response.status == 200) {
-                console.log('QQQ: Adding request "%O" to cache response "%O"', request, response);
-                console.log( request);
-                console.log( response);
                 return cache.put(request, response);
               } else {
-                console.error('QQQ: Request for %s returned a response with status %d, so not attempting to cache it.',
+                console.error('Request for %s returned a response with status %d, so not attempting to cache it.',
                   urlWithCacheBusting, response.status);
                 // Get rid of the empty cache if we can't add a successful response to it.
                 return caches.delete(cacheName);
@@ -142,7 +143,7 @@ self.addEventListener('install', function(event) {
             return cacheName.indexOf(CacheNamePrefix) == 0 &&
                    !(cacheName in CurrentCacheNamesToAbsoluteUrl);
           }).map(function(cacheName) {
-            console.log('QQQ: Deleting out-of-date cache "%s"', cacheName);
+            console.log('Deleting out-of-date cache "%s"', cacheName);
             return caches.delete(cacheName);
           })
         )
@@ -181,16 +182,11 @@ self.addEventListener('message', function(event) {
 
 
 self.addEventListener('fetch', function(event) {
-    console.log('QQQ fetch: %s', event.request.method);
-    console.log('QQQ fetch: %s', event.request.url);
   if (event.request.method == 'GET') {
     var urlWithoutIgnoredParameters = stripIgnoredUrlParameters(event.request.url,
       IgnoreUrlParametersMatching);
-    console.log('QQQ fetch: urlWithoutIgnoredParameters: %s', urlWithoutIgnoredParameters);
 
     var cacheName = AbsoluteUrlToCacheName[urlWithoutIgnoredParameters];
-    console.log('QQQ cacheName: %s', cacheName);
-
     var directoryIndex = 'index.html';
     if (!cacheName && directoryIndex) {
       urlWithoutIgnoredParameters = addDirectoryIndex(urlWithoutIgnoredParameters, directoryIndex);
@@ -205,23 +201,13 @@ self.addEventListener('fetch', function(event) {
         caches.open(cacheName).then(function(cache) {
           return cache.keys().then(function(keys) {
             return cache.match(keys[0]).then(function(response) {
-                console.error('QQQ: keys[0]: ');
-                console.error(keys[0]);
-                console.error('QQQ: keys: ');
-                console.error(keys);
-                console.error('QQQ: Response: "%O" ', response);
-                console.error(response);
-                console.error('QQQ: event.request: "%O" ', event.request);
-                console.error(event.request);
               return response || fetch(event.request).catch(function(e) {
-                //console.error('QQQ: Fetch for "' + urlWithoutIgnoredParameters +'" failed: ' + e);
-                console.error('QQQ: Fetch for "%s" failed: %O', urlWithoutIgnoredParameters, e);
+                console.error('Fetch for "%s" failed: %O', urlWithoutIgnoredParameters, e);
               });
             });
           });
         }).catch(function(e) {
-          console.error('QQQ: Couldn\'t serve response for "%s" from cache: %O', urlWithoutIgnoredParameters, e);
-          //console.error('QQQ: Couldn\'t serve response for "%s" from cache: %s', urlWithoutIgnoredParameters, e);
+          console.error('Couldn\'t serve response for "%s" from cache: %O', urlWithoutIgnoredParameters, e);
           return fetch(event.request);
         })
       );
