@@ -55,7 +55,8 @@ function generateServiceWorkerFileContents(rootDir, handleFetch, callback) {
       rootDir + '/css/**.css',
       rootDir + '/**.html',
       rootDir + '/images/**.*',
-      rootDir + '/js/**.js'
+      rootDir + '/js/**.js',
+      rootDir + '/js/ext/**.js'
     ],
     stripPrefix: path.join(rootDir, path.sep)
   };
